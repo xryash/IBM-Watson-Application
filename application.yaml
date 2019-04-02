@@ -1,0 +1,12 @@
+auth:
+    key:
+    token:
+
+postgres:
+    user: master
+    password: master-postgres-token
+    database: watson
+    port: 5050
+    host: localhost
+
+events: [step]
