@@ -94,6 +94,7 @@ class PostgresConnector(object):
                     return 1
         except (psycopg2.DatabaseError, psycopg2.DataError) as error:
             self.logger.error('.create_tables() received exception: %s' % str(error))
+        finally:
             return 0
 
 
@@ -112,6 +113,7 @@ class PostgresConnector(object):
                     return 1
         except (psycopg2.DatabaseError, psycopg2.DataError) as error:
             self.logger.error('.save_event() received exception: %s' % str(error))
+        finally:
             return 0
 
 

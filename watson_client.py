@@ -7,10 +7,9 @@ from utils import get_digest
 
 
 class WatsonClient(object):
-    def __init__(self, auth_config, events, repository):
+    def __init__(self, logger, auth_config, events, repository):
         """WatsonClient constructor"""
-        self.logger = logging.getLogger(__name__)
-        self.logger.info('.__init__() entered')
+        self.logger = logger
         self.client = iot.ApplicationClient(config=auth_config)
         self.events = events
         self.repository = repository
@@ -23,15 +22,23 @@ class WatsonClient(object):
         self.client.connect()
         self.__subscribe_to_events()
         self.__subscribe_to_statuses()
-        self.__set_event_callback()
-        self.__set_status_callback()
+        self.__set_event_callback(self.__event_callback)
+        self.__set_status_callback(self.__status_callback)
         self.repository.create_tables()
 
 
     def disconnect(self):
         """Disconnect a client"""
         self.logger.info('.disconnect() entered')
-        self.client.disconnect()
+
+        try:
+            self.__set_event_callback()
+            self.__set_status_callback()
+            self.active_devices = []
+            self.client.disconnect()
+
+        except Exception as err:
+            print(str(err))
 
 
     def __subscribe_to_events(self):
@@ -47,10 +54,10 @@ class WatsonClient(object):
         self.client.subscribeToDeviceStatus()
 
 
-    def __set_event_callback(self):
+    def __set_event_callback(self, func=None):
         """Set a callback for device events"""
         self.logger.info('.__set_event_callback() entered')
-        self.client.deviceEventCallback = self.__event_callback
+        self.client.deviceEventCallback = func
 
 
     def __event_callback(self, event):
@@ -79,10 +86,10 @@ class WatsonClient(object):
         self.repository.save_event(entity)
 
 
-    def __set_status_callback(self):
+    def __set_status_callback(self, func=None):
         """Set a callback for device status"""
         self.logger.info('.__set_status_callback() entered')
-        self.client.deviceStatusCallback = self.__status_callback
+        self.client.deviceStatusCallback = func
 
 
     def __status_callback(self, status):

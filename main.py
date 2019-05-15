@@ -1,4 +1,5 @@
 import logging
+import sys
 
 import yaml
 import os
@@ -6,6 +7,9 @@ import os
 from postgres_repository import PostgresConnector
 from watson_client import WatsonClient
 
+from PyQt5.QtWidgets import QApplication
+
+from gui.main_form import MainForm
 
 
 def load_config(config_path):
@@ -24,20 +28,23 @@ def prepare_credentials(postgres_config):
     password = postgres_config['password']
     return host, database, port, user, password
 
-logging.basicConfig(level=logging.INFO)
 
-config_path = os.getenv('CONFIG_PATH', 'application.yaml')
-config = load_config(config_path)
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
 
-events = config['events']
-postgres_config = config['postgres']
+    config_path = os.getenv('CONFIG_PATH', 'application.yaml')
+    config = load_config(config_path)
 
-host, database, port, user, password = prepare_credentials(postgres_config)
-repository = PostgresConnector(host, database, port, user, password)
+    events = config['events']
+    postgres_config = config['postgres']
 
-watson = WatsonClient(config, events, repository)
-watson.connect()
+    host, database, port, user, password = prepare_credentials(postgres_config)
 
+    repository = PostgresConnector(host, database, port, user, password)
 
-while True:
-    pass
+    watson = WatsonClient(logger, config, events, repository)
+
+    app = QApplication(sys.argv)
+    ex = MainForm(logger, watson, repository)
+    sys.exit(app.exec_())
